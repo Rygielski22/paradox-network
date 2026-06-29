@@ -241,10 +241,11 @@ function playerNeedsPackForPlayer (player) {
   if (player?._paradoxPackSig && player._paradoxPackSig !== cachedPackSignature) return true
   const keys = collectPackKeys(player)
   if (!keys.size) return true
+  // Any stable id match counts (console may reconnect with xuid vs name vs addr).
   for (const k of keys) {
-    if (!playersWithPack.has(k)) return true
+    if (playersWithPack.has(k)) return false
   }
-  return false
+  return true
 }
 
 function playerHasPack (packKey) {
@@ -372,6 +373,12 @@ function attachPackStack (player) {
           return
         }
         data.params.resourcepackids = theirs
+        return
+      }
+
+      if ((status === 'have_all_packs' || status === 'completed') && ours.length && !theirs.length) {
+        des.canceled = true
+        return
       }
       return
     }

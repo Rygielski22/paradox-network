@@ -43,12 +43,16 @@ if (needsPackBuild()) {
   }
 }
 
+const packInjector = require('./core/pack-injector')
 const {
   playerNeedsPackForPlayer,
   markPlayerHasPackForPlayer,
   attachPackStack,
   getPlayerPackKey
-} = require('./core/pack-injector')
+} = packInjector
+const { createHandlePackDownload } = require('./core/pack-download')
+const { createLogger } = require('./core/logger')
+const packLogger = createLogger('Paradox')
 
 const relay = new Relay({
   version: config.get('proxy.version'),
@@ -105,144 +109,13 @@ relay.openUpstreamConnection = async function (player, clientAddr) {
   return originalOpenUpstream(player, clientAddr)
 }
 
-function handlePackDownload (player) {
-  const playerName = () => player.profile?.name || 'Unknown'
-  const gameVersion = config.get('proxy.version', '1.26.30')
-  let installKickScheduled = false
-
-  function scheduleInstallKick () {
-    if (installKickScheduled) return
-    installKickScheduled = true
-    markPlayerHasPackForPlayer(player)
-    console.log(`[Pack] ${playerName()} installed — reconnect to play`)
-    setTimeout(() => {
-      player.disconnect(
-        '§1§lPack Installed!\n\n' +
-        '§7Paradox HUD has been downloaded.\n' +
-        '§7Please §f§lreconnect §7to start playing.'
-      )
-    }, 1200)
-  }
-
-  const packInjector = require('./core/pack-injector')
-  if (!packInjector.packBuffer || packInjector.packSize === 0) {
-    console.error('Pack buffer is null — cannot serve pack')
-    player.disconnect('§cResource pack unavailable.\n§7Please contact server admin.')
-    return
-  }
-
-  const CHUNK_SIZE = packInjector.CHUNK_SIZE || 1024 * 128
-  const originalReadPacket = player.readPacket.bind(player)
-
-  player.readPacket = function (packet) {
-    let des
-    try {
-      des = player.server.deserializer.parsePacketBuffer(packet)
-    } catch (e) {
-      const head = packet && packet.length ? packet.slice(0, 8).toString('hex') : ''
-      console.warn(`[Pack] ${playerName()} parse fail — forwarding (${e.message})${head ? ' buf=' + head : ''}`)
-      originalReadPacket(packet)
-      return
-    }
-
-    const name = des.data.name
-    const params = des.data.params
-
-    if (name === 'resource_pack_client_response') {
-      const status = params.response_status
-      console.log(`[Pack] ${playerName()} → ${status}`)
-
-      if (status === 'refused') {
-        player.disconnect('§cPack required.\n§7Enable resource packs in settings and reconnect.')
-        return
-      }
-
-      if (status === 'send_packs') {
-        const chunkCount = Math.ceil(packInjector.packSize / CHUNK_SIZE)
-        console.log(`[Pack] ${playerName()} sending ${chunkCount} chunk(s) (${packInjector.packSize} bytes)`)
-        player.queue('resource_pack_data_info', {
-          pack_id: packInjector.PACK_ID,
-          max_chunk_size: CHUNK_SIZE,
-          chunk_count: chunkCount,
-          size: BigInt(packInjector.packSize),
-          hash: packInjector.packHash,
-          is_premium: false,
-          pack_type: 'resources'
-        })
-      }
-
-      if (status === 'have_all_packs') {
-        player.queue('resource_pack_stack', {
-          must_accept: true,
-          resource_packs: [{
-            uuid: packInjector.PACK_UUID,
-            version: packInjector.PACK_VERSION,
-            name: packInjector.PACK_NAME || ''
-          }],
-          game_version: gameVersion,
-          experiments: [],
-          experiments_previously_used: false,
-          has_editor_packs: false
-        })
-      }
-
-      if (status === 'completed') {
-        scheduleInstallKick()
-      }
-
-      return
-    }
-
-    if (name === 'resource_pack_chunk_request') {
-      const offset = Number(params.chunk_index) * CHUNK_SIZE
-      const buf = packInjector.packBuffer
-      const chunk = buf.slice(offset, offset + CHUNK_SIZE)
-
-      player.queue('resource_pack_chunk_data', {
-        pack_id: packInjector.PACK_ID,
-        chunk_index: params.chunk_index,
-        progress: BigInt(offset),
-        payload: chunk
-      })
-      return
-    }
-
-    originalReadPacket(packet)
-  }
-
-  const sendPackInfo = () => {
-    console.log(`[Pack] Handshake ready for ${playerName()} — advertising ${packInjector.PACK_UUID}`)
-    player.queue('resource_packs_info', {
-      must_accept: true,
-      has_addons: false,
-      has_scripts: false,
-      disable_vibrant_visuals: false,
-      world_template: {
-        uuid: '00000000-0000-0000-0000-000000000000',
-        version: ''
-      },
-      texture_packs: [{
-        uuid: packInjector.PACK_UUID,
-        version: packInjector.PACK_VERSION,
-        size: BigInt(packInjector.packSize),
-        content_key: '',
-        sub_pack_name: '',
-        content_identity: '',
-        has_scripts: false,
-        addon_pack: false,
-        rtx_enabled: false,
-        cdn_url: ''
-      }]
-    })
-  }
-
-  // Wait for join so client is ready
-  if (player.status >= 3) {
-    sendPackInfo()
-  } else {
-    player.once('join', sendPackInfo)
-  }
-}
+const handlePackDownload = createHandlePackDownload({
+  packInjector,
+  markPlayerHasPackForPlayer,
+  config,
+  logger: packLogger,
+  theme
+})
 
 // Handle upstream auth / connection errors gracefully (e.g. Microsoft 429 rate limits)
 relay.on('error', (err) => {
