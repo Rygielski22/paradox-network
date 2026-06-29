@@ -62,7 +62,7 @@ fs.mkdirSync(UI_DIR, { recursive: true })
 // Client caches packs by UUID. After StorageESP added font/glyphs under the
 // old UUID, clients kept that blob and reject the new minimal zip as
 // "incompatible". Bump PACK_SCHEMA to force fresh UUIDs + full re-download.
-const PACK_SCHEMA = 'lifeboat-boost-v23-darkgray-hud'
+const PACK_SCHEMA = 'lifeboat-boost-v24-blue-status-panel'
 const PACK_IDS_PATH = path.join(ROOT, '.pack-ids.json')
 let headerUUID
 let moduleUUID
@@ -182,6 +182,7 @@ const hudScreen = {
   },
 
   // Bottom-right status popup (ModStatus feeds #tip_text via text/tip packets).
+  // Blue border + semi-transparent gray fill (Paradox brand).
   meteor_status_panel: {
     type: 'panel',
     anchor_from: 'bottom_right',
@@ -199,10 +200,21 @@ const hudScreen = {
     ],
     controls: [
       {
+        meteor_status_bg: {
+          type: 'image',
+          texture: 'textures/ui/White',
+          color: [0.14, 0.14, 0.16, 0.58],
+          size: ['100%', '100%'],
+          anchor_from: 'center',
+          anchor_to: 'center',
+          layer: 1
+        }
+      },
+      {
         meteor_status_border_top: {
           type: 'image',
           texture: 'textures/ui/White',
-          color: [0.62, 0.22, 0.95, 1.0],
+          color: [0.12, 0.38, 0.92, 1.0],
           size: ['100%', '2px'],
           anchor_from: 'top_middle',
           anchor_to: 'top_middle',
@@ -213,7 +225,7 @@ const hudScreen = {
         meteor_status_border_bottom: {
           type: 'image',
           texture: 'textures/ui/White',
-          color: [0.62, 0.22, 0.95, 1.0],
+          color: [0.12, 0.38, 0.92, 1.0],
           size: ['100%', '2px'],
           anchor_from: 'bottom_middle',
           anchor_to: 'bottom_middle',
@@ -224,7 +236,7 @@ const hudScreen = {
         meteor_status_border_left: {
           type: 'image',
           texture: 'textures/ui/White',
-          color: [0.62, 0.22, 0.95, 1.0],
+          color: [0.12, 0.38, 0.92, 1.0],
           size: ['2px', '100%'],
           anchor_from: 'left_middle',
           anchor_to: 'left_middle',
@@ -235,7 +247,7 @@ const hudScreen = {
         meteor_status_border_right: {
           type: 'image',
           texture: 'textures/ui/White',
-          color: [0.62, 0.22, 0.95, 1.0],
+          color: [0.12, 0.38, 0.92, 1.0],
           size: ['2px', '100%'],
           anchor_from: 'right_middle',
           anchor_to: 'right_middle',
@@ -249,7 +261,7 @@ const hudScreen = {
           anchor_from: 'left_middle',
           anchor_to: 'left_middle',
           offset: [7, 0],
-          color: [0.45, 0.45, 0.45, 1.0],
+          color: [0.55, 0.72, 1.0, 1.0],
           shadow: true,
           layer: 3,
           bindings: [

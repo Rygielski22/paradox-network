@@ -10,7 +10,7 @@ const PULSE_MS = 3500
 
 function formatHudText (line) {
   if (!line) return null
-  return `§1§l${PANEL_MARKER}§r\n§8${line}`
+  return `§1§l${PANEL_MARKER}§r\n§9${line}`
 }
 
 function sanitizePopupLine (line) {
@@ -27,7 +27,7 @@ function sanitizePopupLine (line) {
 function formatTipText (line) {
   const clean = sanitizePopupLine(line)
   if (!clean) return null
-  return `§1§l${TIP_SHOW_TOKEN}§r §8${clean}`
+  return `§1§l${TIP_SHOW_TOKEN}§r §9${clean}`
 }
 
 function triggerStatusPulse (player, line) {
