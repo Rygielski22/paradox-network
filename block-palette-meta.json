@@ -1,0 +1,22 @@
+{
+  "source": "local/block_states.nbt",
+  "nbtPath": "C:\\Users\\crick\\OneDrive\\Desktop\\New proxy test\\block_states.nbt",
+  "minecraftVersion": "1.26.30",
+  "commit": null,
+  "stateCount": 16913,
+  "generatedAt": "2026-06-21T22:20:15.271Z",
+  "oreIndices": {
+    "coal_ore": 6505,
+    "iron_ore": 7869,
+    "gold_ore": 3378,
+    "diamond_ore": 6860,
+    "emerald_ore": 14733,
+    "lapis_ore": 15325,
+    "redstone_ore": 6545,
+    "deepslate_iron_ore": 14636,
+    "deepslate_diamond_ore": 15901,
+    "nether_gold_ore": 32,
+    "ancient_debris": 12462
+  },
+  "air": 13094
+}

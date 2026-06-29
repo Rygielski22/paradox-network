@@ -1,0 +1,58 @@
+{
+  "namespace": "custom_form",
+
+  "meteor_custom_banner": {
+    "type": "stack_panel",
+    "orientation": "vertical",
+    "size": ["100%", 26],
+    "anchor_from": "top_middle",
+    "anchor_to": "top_middle",
+    "offset": [0, -4],
+    "layer": 50,
+    "bindings": [
+      { "binding_name": "#title_text" },
+      {
+        "binding_type": "view",
+        "source_property_name": "(not ((#title_text - '§5') = #title_text))",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+      {
+        "title_row": {
+          "type": "label",
+          "text": "§5§lMETEOR §d§lPROXY",
+          "color": [1, 1, 1, 1],
+          "shadow": true,
+          "size": ["100%c", 13],
+          "anchor_from": "center",
+          "anchor_to": "center",
+          "font_scale_factor": 1.25
+        }
+      },
+      {
+        "subtitle_row": {
+          "type": "label",
+          "text": "§7click·gui",
+          "color": [0.78, 0.55, 0.95, 1],
+          "shadow": true,
+          "size": ["100%c", 9],
+          "anchor_from": "center",
+          "anchor_to": "center"
+        }
+      }
+    ]
+  },
+
+  "main_screen_content": {
+    "modifications": [
+      {
+        "array_name": "controls",
+        "operation": "insert_front",
+        "value": [
+          { "meteor_banner@custom_form.meteor_custom_banner": {} }
+        ]
+      }
+    ]
+  }
+}

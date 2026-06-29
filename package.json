@@ -1,0 +1,29 @@
+{
+  "name": "paradox-network",
+  "version": "1.0.0",
+  "description": "Paradox Network — premium dark purple & white Bedrock proxy for Lifeboat 1.26.30",
+  "main": "proxy.js",
+  "scripts": {
+    "start": "node proxy.js",
+    "dev": "node proxy.js",
+    "build-pack": "node scripts/build-pack.js",
+    "postinstall": "node scripts/patch-loginverify.js && node scripts/patch-clientcount.js && node scripts/patch-keyexchange.js && node scripts/patch-relay.js"
+  },
+  "keywords": [
+    "minecraft",
+    "bedrock",
+    "proxy",
+    "lifeboat",
+    "paradox",
+    "paradox-network"
+  ],
+  "author": "Paradox Network",
+  "license": "MIT",
+  "dependencies": {
+    "bedrock-protocol": "3.57.0",
+    "raknet-native": "^1.2.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -1,0 +1,20 @@
+node_modules/
+*.log
+.DS_Store
+Thumbs.db
+
+# Runtime / secrets (copy config.example.json → config.json on VPS)
+config.json
+auth_tokens/
+player-configs/
+pack-players.json
+online-players.json
+playtime-sessions.json
+
+# Built pack (npm run build-pack on deploy)
+*.zip
+
+# Local junk
+logs/
+terminals/
+.env

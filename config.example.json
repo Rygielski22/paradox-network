@@ -1,0 +1,32 @@
+{
+  "proxy": {
+    "version": "1.26.30",
+    "host": "0.0.0.0",
+    "port": 19132,
+    "motd": "§1§lParadox Network",
+    "levelName": "§1§lParadox §8| §fproxy",
+    "maxPlayers": 100
+  },
+  "destination": {
+    "host": "play.lbsg.net",
+    "port": 19132,
+    "offline": false
+  },
+  "theme": {
+    "brand": "Paradox Network",
+    "primary": "§1",
+    "secondary": "§1",
+    "prefix": "?",
+    "arraylist": {
+      "enabled": true,
+      "updateInterval": 12
+    }
+  },
+  "security": {
+    "bannedIPs": []
+  },
+  "features": {
+    "enableModules": true,
+    "enablePackInjection": true
+  }
+}
