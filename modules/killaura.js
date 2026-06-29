@@ -10,7 +10,7 @@ const { registerCommand, sendMessage, onDeath } = require('./chat-commands')
 const theme = require('../core/theme')
 const { saveCombatWantFlags, restoreCombatAfterRespawn, syncPlayerRids } = require('../core/player-rid')
 const { resumeKillauraAfterRespawn } = require('../core/death-resync')
-const { triggerModuleTpPulse } = require('../core/mod-status')
+const { triggerModuleTpPulse, clearHudTip } = require('../core/mod-status')
 const {
   bindKaEntityTracking,
   kaKey,
@@ -156,6 +156,7 @@ module.exports = {
         player._killauraWantOn = false
         player._killauraPauseUntil = 0
         resetKillaura(player)
+        clearHudTip(player)
         sendMessage(player, theme.toggle('KillAura', false))
       } else if (a === 'range') {
         const n = parseInt(args[1], 10)
@@ -241,17 +242,6 @@ module.exports = {
               position: player._lastPos || player._kaPos || player._killauraPos
             })
           }
-        }
-        if (isHurtEvent(p)) {
-          const key = kaKey(p.runtime_entity_id)
-          if (!key || key !== player._killauraLastTarget) return
-          const ent = player._kaEntities?.get(key)
-          const name = formatPopupTargetName(ent, ent?.name)
-          const pos = livePos(player)
-          const dist = pos && ent
-            ? Math.hypot(ent.x - pos.x, ent.y - pos.y, ent.z - pos.z)
-            : 0
-          triggerModuleTpPulse(player, 'killaura', `${name} @ ${dist.toFixed(1)}m`)
         }
         return
       }

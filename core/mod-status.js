@@ -1,16 +1,17 @@
 'use strict'
 
 // Status panel binds to #tip_text via text/tip packets (Lifeboat-safe).
-// Modules call triggerStatusPulse() on every TP / aura hit.
+// ModStatus module clears the panel when the pulse expires.
 
 const PANEL_MARKER = 'Paradox'
 const TIP_SHOW_TOKEN = 'Paradox ·'
 const TIP_HIDE_TEXT = '§r§f'
 const PULSE_MS = 3500
+const KILLAURA_PULSE_MS = 1200
 
 function formatHudText (line) {
   if (!line) return null
-  return `§1§l${PANEL_MARKER}§r\n§9${line}`
+  return `§1§l${PANEL_MARKER}§r\n§1${line}`
 }
 
 function sanitizePopupLine (line) {
@@ -27,17 +28,32 @@ function sanitizePopupLine (line) {
 function formatTipText (line) {
   const clean = sanitizePopupLine(line)
   if (!clean) return null
-  return `§1§l${TIP_SHOW_TOKEN}§r §9${clean}`
+  return `§1§l${TIP_SHOW_TOKEN}§r §1${clean}`
 }
 
-function triggerStatusPulse (player, line) {
+function schedulePulseExpiry (player) {
+  if (player._msClearTimer) clearTimeout(player._msClearTimer)
+  const until = player._msPulseUntil
+  const delay = Math.max(50, until - Date.now())
+  player._msClearTimer = setTimeout(() => {
+    if (!player || player._msPulseUntil !== until) return
+    player._msPulseUntil = 0
+    player._msPulseLine = null
+    player._msActive = false
+    player._msLastText = null
+    clearHudTip(player)
+  }, delay)
+}
+
+function triggerStatusPulse (player, line, durationMs = PULSE_MS) {
   if (!player || !line) return
-  player._msPulseUntil = Date.now() + PULSE_MS
+  player._msPulseUntil = Date.now() + durationMs
   player._msPulseLine = line
   const text = formatTipText(line)
   player._msLastText = text
   player._msActive = true
   sendHudTip(player, text)
+  schedulePulseExpiry(player)
   try { player.emit('meteor_hud_pulse') } catch (e) {}
 }
 
@@ -56,7 +72,7 @@ function pulseLineForModule (player, module, extra) {
     case 'surface':
       return 'surfacing'
     case 'killaura':
-      return sanitizePopupLine(extra) || 'reach hit'
+      return sanitizePopupLine(extra) || 'attacking'
     case 'playercoords':
       return extra || 'Finding Players...'
     default:
@@ -64,8 +80,10 @@ function pulseLineForModule (player, module, extra) {
   }
 }
 
-function triggerModuleTpPulse (player, module, extra) {
-  triggerStatusPulse(player, pulseLineForModule(player, module, extra))
+function triggerModuleTpPulse (player, module, extra, durationMs) {
+  const line = pulseLineForModule(player, module, extra)
+  const ms = durationMs ?? (module === 'killaura' ? KILLAURA_PULSE_MS : PULSE_MS)
+  triggerStatusPulse(player, line, ms)
 }
 
 function buildHudText (player) {
@@ -82,6 +100,7 @@ function isOurHudMessage (msg) {
     msg.includes('surfacing') ||
     msg.includes('tp to ') ||
     msg.includes('reach hit') ||
+    msg.includes('attacking') ||
     msg.includes('Finding Players') ||
     msg.includes('Syncing position') ||
     msg.includes(' @ ')
@@ -118,6 +137,10 @@ function sendHudTip (player, text) {
 }
 
 function clearHudTip (player) {
+  if (player._msClearTimer) {
+    clearTimeout(player._msClearTimer)
+    player._msClearTimer = null
+  }
   sendHudTip(player, TIP_HIDE_TEXT)
   setImmediate(() => sendHudTip(player, TIP_HIDE_TEXT))
 }
@@ -126,6 +149,7 @@ module.exports = {
   PANEL_MARKER,
   TIP_SHOW_TOKEN,
   PULSE_MS,
+  KILLAURA_PULSE_MS,
   triggerStatusPulse,
   triggerModuleTpPulse,
   buildHudText,
