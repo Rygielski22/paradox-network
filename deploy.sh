@@ -16,7 +16,11 @@ fi
 
 if [ -d .git ]; then
   echo "[0/5] Pulling latest code..."
-  git pull --ff-only 2>/dev/null || echo "  (no remote or pull skipped)"
+  if ! git pull --ff-only origin main 2>/dev/null; then
+    echo "  pull blocked by local pack build files — resetting to origin/main..."
+    git checkout -- .pack-ids.json .pack-version resource_pack/manifest.json resource_pack/ui/hud_screen.json 2>/dev/null || true
+    git reset --hard origin/main
+  fi
 fi
 
 if [ ! -f config.json ]; then
